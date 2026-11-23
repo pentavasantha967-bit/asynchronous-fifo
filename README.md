@@ -1,99 +1,68 @@
-# Asynchronous FIFO in Verilog
-
-A Verilog implementation of a **16-word × 8-bit asynchronous FIFO** with
-independent write and read clock domains.
+# Asynchronous FIFO Design in Verilog
 
 ## Overview
 
-An asynchronous FIFO allows data to be written using one clock and read
-using another. It follows the **First-In, First-Out (FIFO)** principle:
-the first data written is the first data read.
+This project contains a Verilog implementation of a 16-entry, 8-bit
+asynchronous FIFO.
 
-This project is intended to practise RTL design and basic
-simulation-based verification of an asynchronous FIFO.
+The FIFO uses separate write and read clocks. Data is written into the
+memory in write order and read out in the same order.
 
-## Design Specifications
+## Specifications
 
-  Feature            Specification
-  ------------------ -----------------------------------------
-  FIFO depth         16 entries
-  Data width         8 bits
-  Storage capacity   128 bits
-  Write clock        Independent write clock (`w_clk`)
-  Read clock         Independent read clock (`r_clk`)
-  Reset              Active-low asynchronous reset (`reset`)
-  Write control      `w_en`
-  Read control       `r_en`
-  Status flags       `full`, `empty`
+  Parameter        Value
+  ---------------- -------------------------------
+  FIFO depth       16 entries
+  Data width       8 bits
+  Total storage    128 bits
+  Write clock      `w_clk`
+  Read clock       `r_clk`
+  Reset            Active-low asynchronous reset
+  Write enable     `w_en`
+  Read enable      `r_en`
+  Status outputs   `full`, `empty`
 
-## Design Concepts
+## Design
 
--   **Separate clock domains:** Writing and reading are controlled by
-    independent clocks.
--   **Binary pointers:** The read and write pointers are 5 bits wide.
-    Four lower bits select one of the 16 memory locations, and the fifth
-    bit tracks wraparound.
--   **Gray-code pointers:** Gray-coded pointer values are used when
-    transferring pointer information between clock domains.
--   **Two-flop synchronizers:** Pointer information crossing into the
-    other clock domain passes through two flip-flops to reduce the
-    chance of metastability propagating.
--   **FULL and EMPTY flags:** The flags indicate when the FIFO cannot
-    accept another write or has no data available to read.
+The design uses:
 
-## Project Files
+-   A 16 × 8-bit memory array.
+-   5-bit binary read and write pointers. The lower four bits select a
+    memory location, while the fifth bit tracks pointer wraparound.
+-   Gray-code read and write pointers for clock-domain crossing.
+-   Two-flop synchronizers to transfer pointer information between the
+    write and read clock domains.
+-   `full` and `empty` status flags to indicate when writing or reading
+    is not permitted.
 
-``` text
-verilog-asynchronous-fifo/
-├── rtl/
-│   └── asy_fifo.v
-├── testbench/
-│   └── fifo_tb.v
-└── README.md
-```
+The write side is controlled by `w_clk` and the read side is controlled
+by `r_clk`.
 
-The folder names above are a suggested organization. If the files are
-uploaded in the repository root, the README can be updated to match.
+## Files
+
+-   `asynchronous_fifo.v` --- FIFO RTL design.
+-   `asynchronous-fifo_tb.v` --- Verilog testbench.
 
 ## Simulation
 
-The design and testbench can be simulated in **Xilinx Vivado**.
+The design is simulated using Xilinx Vivado.
 
-1.  Add `asy_fifo.v` as a design source.
-2.  Add `fifo_tb.v` as a simulation source.
-3.  Set the testbench module (`asy_fifio_tb`, or the exact module name
-    in your file) as the simulation top.
-4.  Run **Behavioral Simulation**.
-5.  Observe the write/read clocks, enables, pointers, data output, and
-    FULL/EMPTY flags in the waveform.
+The testbench exercises reset, basic write and read operations, and the
+FIFO full and empty conditions. The waveforms can be used to observe the
+clocks, enables, input and output data, and status flags.
 
-## Testbench Goals
+## Interface
 
-The testbench is intended to exercise:
-
--   Reset behaviour.
--   Basic write and read operations.
--   FIFO capacity and the FULL condition.
--   Reading stored data and the EMPTY condition.
--   Attempts to write when full and read when empty.
-
-The testbench and RTL should be checked together in simulation. Confirm
-that the 17th write is rejected when the FIFO is full, the 17th read is
-rejected when it is empty, and the output data matches the order of
-accepted writes.
-
-## Learning Outcomes
-
-Through this project, I am practising:
-
--   FIFO pointer management and wraparound.
--   Binary-to-Gray code conversion.
--   Clock-domain crossing concepts.
--   Two-flop synchronizers.
--   FULL/EMPTY flag generation.
--   Verilog testbench development and waveform debugging.
+  Signal           Direction   Description
+  ---------------- ----------- -------------------------------
+  `w_clk`          Input       Write clock
+  `r_clk`          Input       Read clock
+  `w_en`           Input       Write enable
+  `r_en`           Input       Read enable
+  `reset`          Input       Active-low asynchronous reset
+  `data_in[7:0]`   Input       Data input
+  `d_out[7:0]`     Output      Data output
+  `full`           Output      FIFO full status
+  `empty`          Output      FIFO empty status
 
 ------------------------------------------------------------------------
-
-**Note:** This is a learning project. The RTL and testbench may be
-refined as verification progresses.
